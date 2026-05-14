@@ -1,6 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 import chromadb
+import pandas as pd
 
 # OpenAI client
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -9,7 +10,33 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
 # Get collection
-collection = chroma_client.get_collection(name="sports_insights")
+collection = chroma_client.get_or_create_collection(name="sports_insights")
+
+if collection.count() == 0:
+    df = pd.read_csv("sports_insights.csv", encoding="cp1252", sep=None, engine="python")
+
+    for index, row in df.iterrows():
+        text = f"""
+        Athlete: {row['athlete']}
+        Sport: {row['sport']}
+        Theme: {row['theme']}
+        Traits: {row['traits']}
+        Story: {row['story_summary']}
+        Insight: {row['insight']}
+        """
+
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text
+        )
+
+        embedding = response.data[0].embedding
+
+        collection.add(
+            ids=[str(index)],
+            embeddings=[embedding],
+            documents=[text]
+        )
 
 # Page config
 st.set_page_config(
