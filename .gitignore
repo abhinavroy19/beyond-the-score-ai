@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Misc
+chroma_db/
+sports_insights.xlsx
+BeyondTheScore_AI_Notes.txt
